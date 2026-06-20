@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1B5E20">
+    <title>Famille TANAZEU - Gestion</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Bibliothèque pour l'export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- ================= HEADER ================= -->
+        <div class="header">
+            <h1>🏠 Famille TANAZEU</h1>
+            <p>Réunion · 1er samedi du mois</p>
+            <div style="margin-top: 10px; display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <span class="hote-badge" id="hoteDisplay">Hôte : à définir</span>
+                <input type="date" id="sessionDateInput" style="width: auto; padding: 6px 12px; border-radius: 30px; border: none; font-weight: bold;">
+            </div>
+        </div>
+
+        <!-- ================= TAB BAR ================= -->
+        <div class="tab-bar">
+            <div class="tab active" data-tab="tab1">📋 Présences</div>
+            <div class="tab" data-tab="tab2">💰 Tontines</div>
+            <div class="tab" data-tab="tab3">📊 Récap</div>
+            <div class="tab" data-tab="tab4">📅 Historique</div>
+            <div class="tab" data-tab="tab5">🏦 Trésorerie</div>
+            <div class="tab" data-tab="tab6">📊 Stats</div>
+            <div class="tab" data-tab="tab7">📊 Synthèse</div>
+        </div>
+
+        <!-- ============================================
+        TAB 1 : PRÉSENCES & COTISATIONS LIBRES
+        ============================================ -->
+        <div id="tab1" class="tab-content">
+            <div class="card">
+                <h2>👥 Membres présents</h2>
+                <p class="badge">✅ Cochez les présents</p>
+                <div id="checklistContainer"></div>
+                <button id="savePresenceBtn">Enregistrer les présences</button>
+            </div>
+
+            <div class="card">
+                <h2>📚 Cotisations libres</h2>
+                <p class="badge">Scolaire & Congrès</p>
+                <div id="libreCotisationContainer"></div>
+                <div class="totaux-box" id="resumeLibreBox"></div>
+                <button id="saveLibreBtn">Enregistrer les montants</button>
+            </div>
+        </div>
+
+        <!-- ============================================
+        TAB 2 : TONTINES & FONDS
+        ============================================ -->
+        <div id="tab2" class="tab-content hidden">
+            
+            <div class="card">
+                <h2>✅ Participation individuelle</h2>
+                <p>Cochez pour chaque membre s'il participe à la Ration et à l'Assiette.</p>
+                <div id="participationContainer"></div>
+            </div>
+
+            <div class="card">
+                <h2>🔄 Tontine cotisation</h2>
+                <p>Prix de la part : <strong id="currentPriceDisplay">10 000</strong> F</p>
+                <div class="member-row" style="margin-top: 8px;">
+                    <span class="member-name" style="flex:1;">Modifier le prix de la part (F)</span>
+                    <input type="number" id="cotisationPriceInput" value="10000" step="1000" style="flex:2;">
+                </div>
+                <p style="font-size:0.85rem; color:#777; margin-top:4px;">💡 Ex: 5000 pour les réunions avant 2023, 10000 pour les réunions récentes.</p>
+                <p style="font-size:0.85rem; color:#777;">💡 Choisissez 0 part pour ne pas cotiser.</p>
+                <div id="partsSelectContainer"></div>
+                <div class="totaux-box" style="margin-top:10px;">
+                    Total tontine cotisation : <strong id="totalCotisationPartsDisplay">0</strong> F
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🛡️ Fonds de caisse (assurance)</h2>
+                <p>Montant actuel : <strong id="fondsCaisseDisplay">20 000</strong> F</p>
+                <hr style="margin: 12px 0;">
+                <label>Recouvrement après événement :</label>
+                <div class="member-row">
+                    <span class="member-name">Montant à répartir (F)</span>
+                    <input type="number" id="recouvrementMontantInput" placeholder="Ex: 20000" value="20000">
+                </div>
+                <div>Recouvrement par membre présent : <strong id="recouvrementParMembreDisplay">0</strong> F</div>
+                <button id="ajouterRecouvrementBtn" class="secondary">➕ Planifier ce recouvrement</button>
+                <div id="recouvrementListeContainer" style="margin-top:16px; font-size:0.9rem;"></div>
+            </div>
+
+            <div class="card">
+                <h2>🏆 "Membre bouffe sa tontine"</h2>
+                <p>Qui reçoit la tontine globale aujourd'hui ?</p>
+                <select id="beneficiaireSelect"></select>
+                <button id="attribuerTontineBtn" class="secondary">Attribuer la tontine</button>
+            </div>
+        </div>
+
+        <!-- ============================================
+        TAB 3 : RÉCAP & EXPORT (AVEC DÉCISIONS)
+        ============================================ -->
+        <div id="tab3" class="tab-content hidden">
+            <div class="card">
+                <h2>📄 Résumé de la réunion</h2>
+                <div id="recapContainer"></div>
+
+                <!-- DÉCISIONS IMPORTANTES -->
+                <div style="margin-top:20px;">
+                    <h3>📝 Décisions importantes</h3>
+                    <p style="font-size:0.85rem; color:#777;">Saisissez ici les points importants, décisions, observations de la séance.</p>
+                    <textarea id="decisionsTextarea" placeholder="Ex: Prochaine réunion chez Cyrille, augmentation de la tontine..."></textarea>
+                    <button id="saveDecisionsBtn" class="outline" style="margin-top:8px;">💾 Enregistrer les décisions</button>
+                </div>
+
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px;">
+                    <button id="printBtn" class="outline" style="flex:1;">🖨️ Imprimer</button>
+                    <button id="exportPdfBtn" class="outline" style="flex:1;">📄 Exporter PDF</button>
+                    <button id="archiveBtn" class="secondary" style="flex:1;">📂 Archiver cette séance</button>
+                </div>
+
+                <hr style="margin: 20px 0;">
+
+                <h3>📤 Exporter / Importer (Passage de relais)</h3>
+                <button id="exportBtn" class="outline">📤 Exporter l'état complet (JSON)</button>
+                <div class="btn-group" style="margin-top:8px;">
+                    <button id="importBtn" class="outline">📥 Importer un état JSON</button>
+                    <input type="file" id="importFileInput" accept=".json" style="display:none;">
+                </div>
+                <button id="resetBtn" class="danger" style="margin-top:20px;">🔄 Réinitialiser toutes les données</button>
+            </div>
+        </div>        <!-- ============================================
+        TAB 4 : HISTORIQUE
+        ============================================ -->
+        <div id="tab4" class="tab-content hidden">
+            <div class="card">
+                <h2>📅 Historique des réunions</h2>
+                <p class="badge">📆 Depuis 2020</p>
+                <div id="archiveContainer"></div>
+                
+                <div id="archiveActions">
+                    <hr style="margin: 20px 0;">
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button id="exportHistoryBtn" class="outline" style="flex:1;">📤 Exporter l'historique</button>
+                        <button id="importHistoryBtn" class="outline" style="flex:1;">📥 Importer un historique (JSON)</button>
+                        <input type="file" id="importHistoryFileInput" accept=".json" style="display:none;">
+                    </div>
+                    <p style="font-size:0.8rem; color:#777; margin-top:8px;">
+                        💡 Pour remplir les années 2020-2025, préparez un fichier JSON avec la même structure que l'export.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================
+        TAB 5 : TRÉSORERIE
+        ============================================ -->
+        <div id="tab5" class="tab-content hidden">
+            <div class="card">
+                <h2>🏦 Trésorerie - Famille TANAZEU</h2>
+                
+                <div class="totaux-box" style="margin-bottom:16px;">
+                    <div class="recap-line"><span>👤 Trésorier</span> <strong id="treasurerDisplay">---</strong></div>
+                    <div class="recap-line"><span>👨‍👩‍👧‍👦 Chef de famille</span> <strong id="familyHeadDisplay">LEKEUZEU Hervé</strong></div>
+                    <div class="recap-line"><span>🏠 Prochain hôte</span> <strong id="nextHostDisplay">---</strong></div>
+                    <div class="recap-line"><span>🏆 Bénéficiaire du jour</span> <strong id="beneficiaryDisplay">---</strong></div>
+                </div>
+                
+                <h3>💰 Soldes des caisses</h3>
+                <div id="balancesContainer"></div>
+                
+                <hr style="margin:20px 0;">
+                <h3>🔄 Historique des transferts</h3>
+                <div id="transferHistoryContainer"></div>
+                
+                <hr style="margin:20px 0;">
+                <h3>📝 Actions</h3>
+                <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                    <button id="addTransferBtn" class="secondary" style="flex:1;">➕ Ajouter un transfert</button>
+                    <button id="settleBoissonBtn" class="outline" style="flex:1;">💧 Répartir reste boisson</button>
+                </div>
+                
+                <hr style="margin:20px 0;">
+                <h3>✏️ Modifier les responsables</h3>
+                <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                    <button id="changeTreasurerBtn" class="outline" style="flex:1;">👤 Changer le trésorier</button>
+                    <button id="changeNextHostBtn" class="outline" style="flex:1;">🏠 Changer le prochain hôte</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================
+        TAB 6 : STATISTIQUES
+        ============================================ -->
+        <div id="tab6" class="tab-content hidden">
+            <div class="card">
+                <h2>📊 Statistiques</h2>
+                <p class="badge">📈 Analyse des réunions</p>
+                <div id="statsContainer">
+                    <div style="text-align:center;padding:40px;color:#888;">
+                        <p style="font-size:2rem;">📊</p>
+                        <p>Aucune réunion archivée.</p>
+                        <p style="font-size:0.85rem;">Archiver des réunions pour voir les statistiques.</p>
+                    </div>
+                </div>
+                <button id="exportStatsPdfBtn" class="outline" style="margin-top:16px;">📄 Exporter les statistiques (PDF)</button>
+            </div>
+        </div>
+
+        <!-- ============================================
+        TAB 7 : SYNTHÈSE ANNUELLE (NOUVEAU)
+        ============================================ -->
+        <div id="tab7" class="tab-content hidden">
+            <div class="card">
+                <h2>📊 Synthèse Annuelle</h2>
+                <p class="badge">📆 Génération des tableaux de bord</p>
+                
+                <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+                    <div style="flex:1; min-width:140px;">
+                        <label style="font-weight:600;font-size:0.9rem;">Date de début</label>
+                        <input type="date" id="synthesisStart" value="2025-08-01">
+                    </div>
+                    <div style="flex:1; min-width:140px;">
+                        <label style="font-weight:600;font-size:0.9rem;">Date de fin</label>
+                        <input type="date" id="synthesisEnd" value="2026-06-30">
+                    </div>
+                </div>
+                
+                <button id="generateSynthesisBtn" class="secondary" style="margin-top:0;">📊 Générer la synthèse</button>
+                
+                <hr style="margin:20px 0;">
+                
+                <div id="synthesisContainer">
+                    <div style="text-align:center;padding:40px;color:#888;">
+                        <p style="font-size:2rem;">📊</p>
+                        <p>Sélectionnez une période et cliquez sur "Générer la synthèse".</p>
+                        <p style="font-size:0.85rem;">Ex: 2025-08-01 à 2026-06-30</p>
+                    </div>
+                </div>
+                
+                <button id="exportSynthesisPdfBtn" class="outline" style="margin-top:16px;">📄 Exporter la synthèse en PDF</button>
+            </div>
+        </div>
+
+        <footer>Famille TANAZEU · Application modulaire V2.0</footer>
+    </div>
+
+    <!-- ============================================
+    CHARGEMENT DES MODULES JS
+    ============================================ -->
+    <script type="module" src="app.js"></script>
+
+</body>
+</html>
